@@ -1,5 +1,5 @@
 use futures::{Stream, StreamExt};
-use futures::stream::{empty, iter, select_all};
+use futures::stream::{empty, iter, select, select_all};
 use futures_signals::signal::{always, SignalExt};
 use futures_signals::signal::{Mutable, Signal};
 use futures_signals::signal_map::MutableBTreeMap;
@@ -16,12 +16,12 @@ impl<T: Observable + Send + Sync + Clone + 'static> Observable for Mutable<T> {
             .map(|v| {
                 v.changed().boxed()
             })
-            .flatten().boxed();
+            .flatten();
 
         let b = self.signal_cloned()
-            .to_stream().map(|_|()).boxed();
+            .to_stream().map(|_| ());
 
-        select_all([a, b])
+        select(a, b)
     }
 }
 
@@ -34,7 +34,6 @@ impl<K: Ord + Clone + Send + 'static, T: Clone + Send + Observable + 'static> Ob
             }).to_stream()
             .flatten()
             .flatten()
-
     }
 }
 
@@ -42,7 +41,7 @@ impl<T: Observable + Clone + Send + 'static> Observable for MutableVec<T> {
     fn changed(&self) -> impl Stream<Item=()> + Send + 'static {
         self.signal_vec_cloned()
             .to_signal_cloned()
-            .map(|v| iter(v.into_iter().map(|v|v.changed().boxed())))
+            .map(|v| iter(v.into_iter().map(|v| v.changed().boxed())))
             .to_stream().flatten().flatten()
     }
 }
@@ -145,7 +144,7 @@ mod tests {
     async fn basic_observable() {
         let a = TestA {
             a: Mutable::new(0),
-            b: Mutable::new("".to_string())
+            b: Mutable::new("".to_string()),
         };
 
         let mut changes = a.changed();

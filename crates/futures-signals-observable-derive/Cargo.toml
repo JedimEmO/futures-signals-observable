@@ -15,4 +15,4 @@ quote = "1.0.36"
 futures.workspace = true
 futures-signals.workspace = true
 futures-signals-observable = { path = "../futures-signals-observable" }
-tokio = { version = "1.38.1", features = ["macros", "rt"] }
+tokio = { version = "1.38.1", features = ["macros", "rt-multi-thread"] }

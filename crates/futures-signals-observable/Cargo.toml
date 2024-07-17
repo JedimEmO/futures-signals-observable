@@ -7,3 +7,8 @@ license = "MIT"
 [dependencies]
 futures.workspace = true
 futures-signals.workspace = true
+
+[dev-dependencies]
+futures.workspace = true
+futures-signals.workspace = true
+tokio = { version = "1.38.1", features = ["macros", "rt-multi-thread"] }

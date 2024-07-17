@@ -11,6 +11,7 @@ use tokio::task::yield_now;
 struct TestB {
     a: Mutable<u32>,
     b: MutableVec<String>,
+    c: MutableVec<Mutable<i32>>,
 }
 
 #[derive(Observable, Default)]
@@ -31,18 +32,28 @@ async fn test_nested_observable() {
     tokio::spawn(async move {
         let changes = a_cloned.changed();
 
-        changes
-            .for_each(|_| {
-                change_count_cloned.set(change_count_cloned.get() + 1);
-                async move {}
-            })
-            .await;
+        changes.for_each(|_| {
+            println!("change detected");
+            change_count_cloned.set(change_count_cloned.get() + 1);
+            async move {}
+        }).await;
     });
 
     a.c.b.lock_mut().push_cloned("hi there".to_string());
 
     while change_count.get() < 10 {
         a.c.a.set(a.c.a.get() + 1);
+        yield_now().await;
+    }
+
+    a.c.c.lock_mut().push_cloned(0.into());
+
+    change_count.set(0);
+
+    while change_count.get() < 20 {
+        let v = a.c.c.lock_mut();
+        v.get(0).unwrap().set(v.get(0).unwrap().get() + 1);
+
         yield_now().await;
     }
 }

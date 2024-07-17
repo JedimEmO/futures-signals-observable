@@ -15,8 +15,8 @@ pub fn derive_observable(tokens: proc_macro::TokenStream) -> proc_macro::TokenSt
 
     quote! {
         impl futures_signals_observable::Observable for #struct_ident {
-            fn changed(&self) -> impl futures::Stream<Item=()> {
-                 futures::stream::select_all([
+            fn changed(&self) -> impl futures::Stream<Item=()>  + Send + 'static {
+                futures::stream::select_all([
                     #(#member_changes)*
                 ])
             }

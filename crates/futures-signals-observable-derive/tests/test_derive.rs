@@ -1,3 +1,4 @@
+use std::sync::Arc;
 use futures::StreamExt;
 use futures_signals::signal::Mutable;
 use futures_signals::signal_map::MutableBTreeMap;
@@ -21,13 +22,15 @@ struct TestA {
 
 #[tokio::test]
 async fn test_nested_observable() {
-    let mut a = Box::leak(Box::new(TestA::default()));
+    let mut a = Arc::new(TestA::default());
     let change_count = Mutable::new(0);
     let change_count_cloned = change_count.clone();
 
-    let changes = a.changed();
+    let a_cloned = a.clone();
 
     tokio::spawn(async move {
+        let changes = a_cloned.changed();
+
         changes
             .for_each(|_| {
                 change_count_cloned.set(change_count_cloned.get() + 1);

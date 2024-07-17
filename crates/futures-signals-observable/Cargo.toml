@@ -1,0 +1,9 @@
+[package]
+name = "futures-signals-observable"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+
+[dependencies]
+futures.workspace = true
+futures-signals.workspace = true

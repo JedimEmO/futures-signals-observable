@@ -137,6 +137,7 @@ version = "0.1.0"
 dependencies = [
  "futures",
  "futures-signals",
+ "futures-signals-observable-derive",
  "tokio",
 ]
 

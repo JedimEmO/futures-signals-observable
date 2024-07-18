@@ -4,9 +4,13 @@ version = "0.1.0"
 edition = "2021"
 license = "MIT"
 
+[features]
+derive = ["futures-signals-observable-derive"]
+
 [dependencies]
 futures.workspace = true
 futures-signals.workspace = true
+futures-signals-observable-derive = { path = "../futures-signals-observable-derive", optional = true }
 
 [dev-dependencies]
 futures.workspace = true

@@ -1,0 +1,9 @@
+[package]
+name = "test-lib"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+futures.workspace = true
+futures-signals.workspace = true
+futures-signals-observable = { path = "../futures-signals-observable", features = ["derive"] }

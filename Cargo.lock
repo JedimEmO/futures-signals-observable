@@ -362,6 +362,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "test-lib"
+version = "0.1.0"
+dependencies = [
+ "futures",
+ "futures-signals",
+ "futures-signals-observable",
+]
+
+[[package]]
 name = "tokio"
 version = "1.38.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"

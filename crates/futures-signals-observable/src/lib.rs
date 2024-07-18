@@ -5,9 +5,9 @@ use futures_signals::signal::{Mutable, Signal};
 use futures_signals::signal_map::MutableBTreeMap;
 use futures_signals::signal_vec::{from_stream, MutableVec, SignalVecExt};
 
-#[cfg(feature = "futures-signals-observable")]
+#[cfg(feature = "derive")]
 #[doc(hidden)]
-pub use futures_signals_observable_derive::{self, *};
+pub use futures_signals_observable_derive::*;
 
 pub trait Observable {
     fn changed(&self) -> impl Stream<Item=()> + Send + 'static;

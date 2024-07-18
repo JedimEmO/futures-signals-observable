@@ -120,6 +120,12 @@ impl Observable for f64 {
     }
 }
 
+impl<T> Observable for Option<T> {
+    fn changed(&self) -> impl Stream<Item=()> + Send + 'static {
+        empty()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -7,7 +7,7 @@ use futures_signals::signal_vec::{from_stream, MutableVec, SignalVecExt};
 
 #[cfg(feature = "futures-signals-observable")]
 #[doc(hidden)]
-pub use futures_signals::{self, *};
+pub use futures_signals_observable_derive::{self, *};
 
 pub trait Observable {
     fn changed(&self) -> impl Stream<Item=()> + Send + 'static;

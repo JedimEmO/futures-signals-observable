@@ -1,11 +1,10 @@
 #[cfg(test)]
 mod tests {
+    use super::*;
+    use futures::StreamExt;
     use futures_signals::signal::Mutable;
     use futures_signals::signal_vec::MutableVec;
     use futures_signals_observable::Observable;
-    use futures::StreamExt;
-    use super::*;
-
 
     #[derive(Observable, Default)]
     struct TestB {
@@ -15,6 +14,5 @@ mod tests {
     }
 
     #[test]
-    fn it_works() {
-    }
+    fn it_works() {}
 }

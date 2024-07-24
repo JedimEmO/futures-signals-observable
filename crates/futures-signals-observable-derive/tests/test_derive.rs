@@ -32,7 +32,7 @@ struct UnObservable {}
     #[derive(Observable, Clone)]
     enum SomeEnum {
         Struct { a: Mutable<i32>, b: String, #[shallow] shallow: Mutable<UnObservable>},
-        Tuple(Mutable<i32>, String),
+        Tuple(Mutable<i32>, String, #[shallow] Mutable<String>),
         Unit,
     }
 
@@ -90,7 +90,7 @@ async fn test_nested_observable() {
                 SomeEnum::Struct { a, .. } => {
                     a.set(a.get() + 1)
                 }
-                SomeEnum::Tuple(_, _) => {}
+                SomeEnum::Tuple(_, _, _) => {}
                 SomeEnum::Unit => {}
             };
         }
@@ -108,7 +108,7 @@ async fn test_nested_observable() {
                 SomeEnum::Struct { shallow, .. } => {
                     shallow.set(UnObservable {})
                 }
-                SomeEnum::Tuple(_, _) => {}
+                SomeEnum::Tuple(_, _, _) => {}
                 SomeEnum::Unit => {}
             };
         }
@@ -117,7 +117,7 @@ async fn test_nested_observable() {
     }
 
     change_count.set(0);
-    a.enum_.set(SomeEnum::Tuple ( Default::default(), "".to_string() ));
+    a.enum_.set(SomeEnum::Tuple ( Default::default(), "".to_string(), Default::default()));
 
     while change_count.get() < 20 {
         {
@@ -125,7 +125,7 @@ async fn test_nested_observable() {
             match &*v {
                 SomeEnum::Struct {  .. } => {
                 }
-                SomeEnum::Tuple(a, _) => {
+                SomeEnum::Tuple(a, _, _) => {
                     a.set(a.get() + 1)
 
                 }

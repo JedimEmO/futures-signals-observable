@@ -77,7 +77,11 @@ pub fn derive_observable(tokens: proc_macro::TokenStream) -> proc_macro::TokenSt
                         let ident = format!("v_{}", i);
                         let ident = syn::Ident::new(ident.as_str(), proc_macro2::Span::call_site());
 
-                        quote! { #ident.changed().boxed() }
+                        if has_shallow_attribute(&n.attrs) {
+                            quote! { #ident .changed_shallow().boxed() }
+                        } else {
+                            quote! { #ident .changed().boxed() }
+                        }
                     });
 
                     quote! {

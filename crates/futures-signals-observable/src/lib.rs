@@ -1,3 +1,4 @@
+use std::path::PathBuf;
 use futures::stream::{empty, iter, select, select_all};
 use futures::{Stream, StreamExt};
 use futures_signals::signal::{always, SignalExt};
@@ -11,6 +12,10 @@ pub use futures_signals_observable_derive::*;
 
 pub trait Observable {
     fn changed(&self) -> impl Stream<Item = ()> + Send + 'static;
+}
+
+pub trait ShallowObservable {
+    fn changed_shallow(&self) -> impl Stream<Item=()> + Send + 'static;
 }
 
 impl<T: Observable + Send + Sync + Clone + 'static> Observable for Mutable<T> {
@@ -27,6 +32,12 @@ impl<T: Observable + Send + Sync + Clone + 'static> Observable for Mutable<T> {
     }
 }
 
+impl<T: Send + Sync + 'static> ShallowObservable for Mutable<T> {
+    fn changed_shallow(&self) -> impl Stream<Item=()> + Send + 'static {
+        self.signal_ref(|_| ()).to_stream().boxed()
+    }
+}
+
 impl<K: Ord + Clone + Send + 'static, T: Clone + Send + Observable + 'static> Observable
     for MutableBTreeMap<K, T>
 {
@@ -40,6 +51,12 @@ impl<K: Ord + Clone + Send + 'static, T: Clone + Send + Observable + 'static> Ob
     }
 }
 
+impl<K:  Ord + Clone + Send + 'static, T: Observable + Clone + Send + 'static> ShallowObservable for MutableBTreeMap<K, T> {
+    fn changed_shallow(&self) -> impl Stream<Item=()> + Send + 'static {
+        self.signal_vec_keys().to_signal_cloned().map(|_| ()).to_stream().boxed()
+    }
+}
+
 impl<T: Observable + Clone + Send + 'static> Observable for MutableVec<T> {
     fn changed(&self) -> impl Stream<Item = ()> + Send + 'static {
         self.signal_vec_cloned()
@@ -48,6 +65,12 @@ impl<T: Observable + Clone + Send + 'static> Observable for MutableVec<T> {
             .to_stream()
             .flatten()
             .flatten()
+    }
+}
+
+impl<T: Observable + Clone + Send + 'static> ShallowObservable for MutableVec<T> {
+    fn changed_shallow(&self) -> impl Stream<Item=()> + Send + 'static {
+        self.signal_vec_cloned().to_signal_cloned().map(|_| ()).to_stream().boxed()
     }
 }
 
@@ -118,6 +141,12 @@ impl Observable for f32 {
 }
 
 impl Observable for f64 {
+    fn changed(&self) -> impl Stream<Item = ()> + Send + 'static {
+        futures::stream::iter([])
+    }
+}
+
+impl Observable for PathBuf {
     fn changed(&self) -> impl Stream<Item = ()> + Send + 'static {
         futures::stream::iter([])
     }

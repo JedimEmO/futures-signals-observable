@@ -5,7 +5,7 @@ use futures::StreamExt;
 use futures_signals::signal::Mutable;
 use futures_signals::signal_map::MutableBTreeMap;
 use futures_signals::signal_vec::MutableVec;
-use futures_signals_observable::Observable;
+use futures_signals_observable::*;
 use std::sync::Arc;
 use tokio::task::yield_now;
 
@@ -20,16 +20,21 @@ struct TestB {
 struct TestA {
     a: MutableBTreeMap<String, u32>,
     b: Mutable<String>,
+    #[shallow]
+    unobservable: Mutable<UnObservable>,
     c: TestB,
     enum_: Mutable<SomeEnum>
 }
 
-#[derive(Observable, Clone)]
-enum SomeEnum {
-    Struct { a: Mutable<i32>, b: String },
-    Tuple(Mutable<i32>, String),
-    Unit,
-}
+#[derive(Clone, Default)]
+struct UnObservable {}
+
+    #[derive(Observable, Clone)]
+    enum SomeEnum {
+        Struct { a: Mutable<i32>, b: String, #[shallow] shallow: Mutable<UnObservable>},
+        Tuple(Mutable<i32>, String),
+        Unit,
+    }
 
 impl Default for SomeEnum {
     fn default() -> Self {
@@ -76,7 +81,7 @@ async fn test_nested_observable() {
     }
 
     change_count.set(0);
-    a.enum_.set(SomeEnum::Struct { a: Default::default(), b: "".to_string() });
+    a.enum_.set(SomeEnum::Struct { a: Default::default(), b: "".to_string(), shallow: Default::default() });
 
     while change_count.get() < 20 {
         {
@@ -84,6 +89,24 @@ async fn test_nested_observable() {
             match &*v {
                 SomeEnum::Struct { a, .. } => {
                     a.set(a.get() + 1)
+                }
+                SomeEnum::Tuple(_, _) => {}
+                SomeEnum::Unit => {}
+            };
+        }
+
+        yield_now().await;
+    }
+
+    change_count.set(0);
+    a.enum_.set(SomeEnum::Struct { a: Default::default(), b: "".to_string(), shallow: Default::default() });
+
+    while change_count.get() < 20 {
+        {
+            let v = a.enum_.lock_mut();
+            match &*v {
+                SomeEnum::Struct { shallow, .. } => {
+                    shallow.set(UnObservable {})
                 }
                 SomeEnum::Tuple(_, _) => {}
                 SomeEnum::Unit => {}

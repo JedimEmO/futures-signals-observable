@@ -1,9 +1,18 @@
 use proc_macro2::Span;
 use proc_macro2::TokenStream;
 use quote::quote;
-use syn::Fields;
+use syn::{Attribute, Fields};
 
-#[proc_macro_derive(Observable)]
+fn has_shallow_attribute(attrs: &Vec<Attribute>) -> bool {
+    for attr in attrs {
+        if attr.path().is_ident("shallow") {
+            return true;
+        }
+    }
+
+    false
+}
+#[proc_macro_derive(Observable, attributes(shallow))]
 pub fn derive_observable(tokens: proc_macro::TokenStream) -> proc_macro::TokenStream {
     if let Ok(str) = syn::parse::<syn::ItemStruct>(tokens.clone()) {
         let struct_ident = str.ident.clone();
@@ -11,7 +20,11 @@ pub fn derive_observable(tokens: proc_macro::TokenStream) -> proc_macro::TokenSt
         let member_changes = str.fields.iter().map(|field| {
             let field_ident = field.ident.as_ref().expect("only named fields supported");
 
-            quote! { self. #field_ident . changed().boxed(),}
+            if has_shallow_attribute(&field.attrs) {
+                quote! { self. #field_ident . changed_shallow().boxed(),}
+            } else {
+                quote! { self. #field_ident . changed().boxed(),}
+            }
         });
 
         quote! {
@@ -39,7 +52,11 @@ pub fn derive_observable(tokens: proc_macro::TokenStream) -> proc_macro::TokenSt
                     let named_watches = named.named.iter().map(|n| {
                         let ident = n.ident.clone().unwrap();
 
-                        quote! { #ident .changed().boxed() }
+                        if has_shallow_attribute(&n.attrs) {
+                            quote! { #ident .changed_shallow().boxed() }
+                        } else {
+                            quote! { #ident .changed().boxed() }
+                        }
                     });
 
                     quote! {
